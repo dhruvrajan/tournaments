@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# 
+#
 # tournament.py -- implementation of a Swiss-system tournament
 #
 
@@ -35,37 +35,40 @@ class Tournament:
                 result = None
             connection.commit()
         finally:
-            connection.close()  # Make sure to close connection even if exception is thrown
+            # Make sure to close connection even if exception is thrown
+            connection.close()
         return result
 
     def deleteMatches(self):
         """Remove all the match records from the database."""
-        self.execute("delete from matches")
+        self.execute("DELETE FROM matches")
 
     def deletePlayers(self):
         """Remove all the player records from the database."""
-        self.execute("delete from players")
+        self.execute("DELETE FROM players")
 
     def countPlayers(self):
         """Returns the number of players currently registered."""
-        result = self.execute("select count(*) from players")[0][0]
+        result = self.execute("SELECT count(*) FROM players")[0][0]
         return int(result)
 
     def registerPlayer(self, name):
         """Adds a player to the tournament database.
 
         The database assigns a unique serial id number for the player.  (This
-        should be handled by your SQL database schema, not in your Python code.)
+        should be handled by your SQL database schema, not in your Python
+        code.)
 
         Args:
           name: the player's full name (need not be unique).
         """
-        self.execute("insert into players (name) values ('%s')" % fix(name))
+        self.execute("INSERT INTO players (name) VALUES ('%s')" % fix(name))
 
     def playerStandings(self):
         """Returns a list of the players and their win records, sorted by wins.
 
-        The first entry in the list should be the player in first place, or a player
+        The first entry in the list should be the player in first place, or a
+        player
         tied for first place if there is currently a tie.
 
         Returns:
@@ -78,7 +81,8 @@ class Tournament:
         connection = connect()
         cursor = connection.cursor()
         cursor.execute(
-            "select id, name, numWins(id) as wins, numMatches(id) as matches from players order by wins DESC, matches DESC, id DESC")
+            "SELECT id, name, numWins(id) as wins, numMatches(id) as matches \
+            FROM players ORDER BY wins DESC, matches DESC, id DESC")
         results = cursor.fetchall()
         return results
 
@@ -90,16 +94,17 @@ class Tournament:
           loser:  the id number of the player who lost
         """
         self.execute(
-            """insert into matches (round, winner, loser) values (%d, %d, %d)"""
+            """INSERT INTO matches (round, winner, loser)  \
+            VALUES (%d, %d, %d)"""
             % (self.current_round, winner, loser))
 
     def swissPairings(self):
         """Returns a list of pairs of players for the next round of a match.
 
-        Assuming that there are an even number of players registered, each player
-        appears exactly once in the pairings.  Each player is paired with another
-        player with an equal or nearly-equal win record, that is, a player adjacent
-        to him or her in the standings.
+        Assuming that there are an even number of players registered, each
+        player appears exactly once in the pairings. Each player is paired with
+        another player with an equal or nearly-equal win record, that is, a
+        player adjacent to him or her in the standings.
 
         Returns:
           A list of tuples, each of which contains (id1, name1, id2, name2)
@@ -112,7 +117,9 @@ class Tournament:
         return self.update_matches()
 
     def update_matches(self):
-        """ Update the matches table with match - pairings. Returns a list of match-parings (tuples):
+        """ Update the matches table with match - pairings. Returns a list of
+        match-parings (tuples):
+
         (id1, name1, id2, name2)
         id1: the first player's unique id
         name1: the first player's name
@@ -125,12 +132,15 @@ class Tournament:
 
         #  Generate matchups from playerStandings
         matchups = [
-            (player_standings[x][0], player_standings[x][1], player_standings[x + 1][0], player_standings[x + 1][1])
+            (player_standings[x][0], player_standings[x][1],
+             player_standings[x + 1][0], player_standings[x + 1][1])
             for x in range(0, len(player_standings), 2)]
         for matchup in matchups:
-            try:  # If an Integrity error is thrown, then the row already exists.
-                self.execute("insert into matches (round, winner, loser) values (%d, %d, %d)" % (
-                    self.current_round, matchup[0], matchup[2]))
+            try:  # If Integrity error is thrown then the row already exists.
+                self.execute(
+                    "INSERT INTO matches (round, winner, loser)  \
+                    VALUES (%d, %d, %d)" % (
+                        self.current_round, matchup[0], matchup[2]))
             except psycopg2.IntegrityError:
                 print("INTEGRITY ERROR")
 
@@ -140,7 +150,8 @@ class Tournament:
         """Start a new round"""
         self.current_round += 1
         try:
-            self.execute("insert into rounds (id) values (%d)" % self.current_round)
+            self.execute(
+                "INSERT INTO rounds (id) VALUES (%d)" % self.current_round)
         except psycopg2.IntegrityError:
             pass
 

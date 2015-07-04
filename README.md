@@ -16,6 +16,8 @@ $ psql
 4. In the psql prompt, type:
 ```
 psql > CREATE DATABASE tournament;
+psql > \c tournament;
+psql > \i tournament.sql
 ```
 Now that you've configured your database, feel free to import tournament.py into
 your own projects, or just run tournament_test.py .
