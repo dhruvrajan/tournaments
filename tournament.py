@@ -78,7 +78,7 @@ class Tournament:
         connection = connect()
         cursor = connection.cursor()
         cursor.execute(
-            "select id, name, numWins(id) as wins, numMatches(id) as matches from players order by wins DESC, matches DESC")
+            "select id, name, numWins(id) as wins, numMatches(id) as matches from players order by wins DESC, matches DESC, id DESC")
         results = cursor.fetchall()
         return results
 
@@ -89,11 +89,9 @@ class Tournament:
           winner:  the id number of the player who won
           loser:  the id number of the player who lost
         """
-        self.update_matches()
         self.execute(
-            """update matches set winner_id = %d
-                WHERE (player1_id=%d AND player2_id=%d OR player1_id=%d AND player2_id=%d)"""
-            % (winner, winner, loser, loser, winner))
+            """insert into matches (round, winner, loser) values (%d, %d, %d)"""
+            % (self.current_round, winner, loser))
 
     def swissPairings(self):
         """Returns a list of pairs of players for the next round of a match.
@@ -131,10 +129,10 @@ class Tournament:
             for x in range(0, len(player_standings), 2)]
         for matchup in matchups:
             try:  # If an Integrity error is thrown, then the row already exists.
-                self.execute("insert into matches (round, player1_id, player2_id) values (%d, %d, %d)" % (
+                self.execute("insert into matches (round, winner, loser) values (%d, %d, %d)" % (
                     self.current_round, matchup[0], matchup[2]))
             except psycopg2.IntegrityError:
-                pass
+                print("INTEGRITY ERROR")
 
         return matchups
 
