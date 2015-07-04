@@ -93,6 +93,7 @@ class Tournament:
           winner:  the id number of the player who won
           loser:  the id number of the player who lost
         """
+        # updates the winner/loser columns in matches; makes them accurate
         self.execute(
             """INSERT INTO matches (round, winner, loser)  \
             VALUES (%d, %d, %d)"""
@@ -131,12 +132,14 @@ class Tournament:
         assert len(player_standings) % 2 == 0
 
         #  Generate matchups from playerStandings
+        #  player_standings is ordered, so consecutive players are paired up.
         matchups = [
             (player_standings[x][0], player_standings[x][1],
              player_standings[x + 1][0], player_standings[x + 1][1])
             for x in range(0, len(player_standings), 2)]
         for matchup in matchups:
             try:  # If Integrity error is thrown then the row already exists.
+                #Insert matchups as rows in the matches table
                 self.execute(
                     "INSERT INTO matches (round, winner, loser)  \
                     VALUES (%d, %d, %d)" % (

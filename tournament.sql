@@ -19,12 +19,14 @@ CREATE TABLE matches( round SERIAL REFERENCES rounds(id),
                       PRIMARY KEY (round, winner, loser) );
 
 
+-- Number of wins for a particular player
 CREATE OR REPLACE FUNCTION numWins(integer) RETURNS bigint
     AS 'select count(*) from matches where winner=$1;'
     LANGUAGE SQL
     IMMUTABLE
     RETURNS NULL ON NULL INPUT;
 
+-- Number of matches a player has won.
 CREATE OR REPLACE FUNCTION numMatches(integer) RETURNS bigint
     AS 'select count(*) from matches where winner=$1 OR loser=$1;'
     LANGUAGE SQL
